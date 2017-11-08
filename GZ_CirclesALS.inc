@@ -145,7 +145,7 @@ public OnGameModeExit()
 
 
 // ================================== [NEW FUNCTIONS] ================================== //
-stock GZ_CircleCreate(Float:x, Float:y, Float:radius, squares = -1, Float:square_size = 5.0, Float:min_ang = 0.0, Float:max_ang = 360.0)
+stock GZ_CircumferenceCreate(Float:x, Float:y, Float:radius, squares = -1, Float:square_size = 5.0, Float:min_ang = 0.0, Float:max_ang = 360.0)
 {
 	for(new i = 0; i < MAX_GZ_CIRCLES; i++)
 	{
@@ -159,24 +159,80 @@ stock GZ_CircleCreate(Float:x, Float:y, Float:radius, squares = -1, Float:square
 
 		squares = (squares == -1) ? ( (auto_squares <= free_squares) ? (auto_squares) : (free_squares) ) : ( (squares <= free_squares) ? (squares) : (free_squares) );
 
-		if(squares > free_squares || squares == 0)
+		if(squares == 0)
 		{
-			printf("** [GangZone Circles] The circle couldn't be created, gang zone limit reached.");
+			printf("** [GangZone Circles] The circumference couldn't be created, gang zones limit reached.");
 			break;
 		}
 
-		new Float:diff = (max_ang - min_ang) / float(squares);
+		new Float:temp_x,
+			Float:temp_y,
+			Float:temp_diff,
+			Float:diff = (max_ang - min_ang) / float(squares);
 
 		for(new j = 0; j < squares; j++)
 		{
-			new Float:temp_dif = min_ang + (diff * j);
-			new Float:temp_x = radius * floatcos(temp_dif, degrees);
-			new Float:temp_y = radius * floatsin(temp_dif, degrees);
+			temp_diff = min_ang + (diff * float(j));
+
+			temp_x = radius * floatcos(temp_diff, degrees);
+			temp_y = radius * floatsin(temp_diff, degrees);
 
 			gzc_gInfo[i][gzc_Elements][j] = GangZoneCreate((x + temp_x) - square_size, (y + temp_y) - square_size, (x + temp_x) + square_size, (y + temp_y) + square_size);
 		}
 
 		gzc_gGangZonesUsed += squares;
+		gzc_gInfo[i][gzc_Exists] = true;
+
+		return i;
+	}
+	return INVALID_GZ_CIRCLE_ID;
+}
+
+stock GZ_CircleCreate(Float:x, Float:y, Float:radius, squares = -1)
+{
+	for(new i = 0; i < MAX_GZ_CIRCLES; i++)
+	{
+		if(gzc_gInfo[i][gzc_Exists])
+		{
+			continue;
+		}
+
+		new auto_squares = floatround((radius * 512.0)/750.0);
+		new free_squares = MAX_GANG_ZONES - gzc_gGangZonesUsed;
+
+		squares = (squares == -1) ? ( (auto_squares <= free_squares) ? (auto_squares) : (free_squares) ) : ( (squares <= free_squares) ? (squares) : (free_squares) );
+
+		if(squares == 0)
+		{
+			printf("** [GangZone Circles] The circle couldn't be created, gang zones limit reached.");
+			break;
+		}
+
+		new Float:temp_x,
+			Float:temp_y,
+			Float:next_x,
+			Float:temp_diff,
+			Float:diff = 360.0 / float(squares);
+
+		for(new j = 0; j < squares; j++)
+		{
+			temp_diff = (diff * float(j));
+
+			temp_x = radius * floatcos(temp_diff, degrees);
+			temp_y = radius * floatsin(temp_diff, degrees);
+			next_x = radius * floatcos((diff * float(j + 1)), degrees);
+
+			if(0.0 <= temp_diff <= 180.0)
+			{
+				gzc_gInfo[i][gzc_Elements][j] =  GangZoneCreate((x + next_x), y, (x + temp_x), (y + temp_y));
+			}
+			else
+			{
+				gzc_gInfo[i][gzc_Elements][j] =  GangZoneCreate((x + temp_x), (y + temp_y), (x + next_x), y);
+			}
+		}
+
+		gzc_gGangZonesUsed += auto_squares;
 		gzc_gInfo[i][gzc_Exists] = true;
 
 		return i;
