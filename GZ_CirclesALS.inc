@@ -1,3 +1,9 @@
+#if defined _gz_circles_included
+	#endinput
+#endif
+#define _gz_circles_included
+
+
 // ================================== [DEFINITIONS] ================================== //
 #if !defined MAX_GZ_CIRCLES
 	#define MAX_GZ_CIRCLES			10
