@@ -164,7 +164,8 @@ stock GZ_CircumferenceCreate(Float:x, Float:y, Float:radius, squares = -1, Float
 			break;
 		}
 
-		new Float:temp_x,
+		new
+			Float:temp_x,
 			Float:temp_y,
 			Float:temp_diff,
 			Float:diff = (max_ang - min_ang) / float(squares);
