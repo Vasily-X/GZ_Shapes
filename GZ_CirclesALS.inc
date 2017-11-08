@@ -15,9 +15,6 @@
 
 
 // ================================== [VARIABLES] ================================== //
-static bool:gzc_gInit;
-static bool:gzc_gExit;
-
 enum gzc_data
 {
 	Float:gzc_x,
@@ -26,9 +23,11 @@ enum gzc_data
 	gzc_Elements[MAX_GANG_ZONES],
 	bool:gzc_Exists
 }
-static gzc_gInfo[MAX_GZ_CIRCLES][gzc_data];
-
-static gzc_gGangZonesUsed;
+static 
+	gzc_gInfo[MAX_GZ_CIRCLES][gzc_data],
+	bool:gzc_gInit,
+	bool:gzc_gExit,
+	gzc_gGangZonesUsed;
 
 
 // ================================== [HOOKED CALLBACKS] ================================== //
@@ -197,8 +196,9 @@ stock GZ_CircleCreate(Float:x, Float:y, Float:radius, squares = -1)
 			continue;
 		}
 
-		new auto_squares = floatround((radius * 512.0)/750.0);
-		new free_squares = MAX_GANG_ZONES - gzc_gGangZonesUsed;
+		new 	
+			auto_squares = floatround((radius * 512.0)/750.0),
+			free_squares = MAX_GANG_ZONES - gzc_gGangZonesUsed;
 
 		squares = (squares == -1) ? ( (auto_squares <= free_squares) ? (auto_squares) : (free_squares) ) : ( (squares <= free_squares) ? (squares) : (free_squares) );
 
@@ -208,7 +208,8 @@ stock GZ_CircleCreate(Float:x, Float:y, Float:radius, squares = -1)
 			break;
 		}
 
-		new Float:temp_x,
+		new 
+			Float:temp_x,
 			Float:temp_y,
 			Float:next_x,
 			Float:temp_diff,
