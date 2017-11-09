@@ -234,7 +234,7 @@ stock GZ_CircleCreate(Float:x, Float:y, Float:radius, squares = -1)
 			}
 		}
 
-		gzc_gGangZonesUsed += auto_squares;
+		gzc_gGangZonesUsed += squares;
 		gzc_gInfo[i][gzc_Exists] = true;
 
 		return i;
