@@ -1,5 +1,5 @@
-# GZ_Circles
-Gang Zone Circles
+# GZ_Shapes
+Gang Zone Shapes
 
 ## External links
 ###### Official SA-MP Forums thread
