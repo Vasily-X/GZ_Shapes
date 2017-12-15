@@ -14,6 +14,9 @@
 #endif
 
 
+#define MAP_SIZE_LIMIT					3000.0
+
+
 // ================================== [VARIABLES] ================================== //
 static bool:gzs_gInit;
 static bool:gzs_gExit;
@@ -76,7 +79,7 @@ public OnFilterScriptExit()
     if(!gzs_gExit)
     {
     	gzs_gExit = true;
-    	GZ_CircleDestroyAll();
+    	GZ_ShapeDestroyAll();
     }
 
     #if defined gzs_OnFilterScriptExit
@@ -131,7 +134,7 @@ public OnGameModeExit()
  	if(!gzs_gExit)
     {
     	gzs_gExit = true;
-    	GZ_CircleDestroyAll();
+    	GZ_ShapeDestroyAll();
     }
 
     #if defined gzs_OnGameModeExit
@@ -172,9 +175,11 @@ stock GZ_ShapeCreate(GZ_SHAPE_TYPES:type, Float:x, Float:y, Float:radius, square
 			break;
 		}
 
-		new Float:temp_x,
-		new Float:temp_y,
-		new Float:temp_diff,
+		new Float:temp_x;
+		new Float:next_x;
+		new Float:temp_y;
+		new Float:temp_diff;
+		new Float:next_diff;
 		new Float:diff = (max_ang - min_ang) / float(squares);
 
 		switch(type)
@@ -183,11 +188,12 @@ stock GZ_ShapeCreate(GZ_SHAPE_TYPES:type, Float:x, Float:y, Float:radius, square
 			{
 				for(new j = 0; j < squares; j++)
 				{
-					temp_diff = (diff * float(j));
+					temp_diff = min_ang + (diff * float(j));
 
 					temp_x = radius * floatcos(temp_diff, degrees);
 					temp_y = radius * floatsin(temp_diff, degrees);
-					next_x = radius * floatcos((diff * float(j + 1)), degrees);
+
+					next_x = radius * floatcos((min_ang + (diff * float(j + 1))), degrees);
 
 					if(0.0 <= temp_diff <= 180.0)
 					{
@@ -201,6 +207,66 @@ stock GZ_ShapeCreate(GZ_SHAPE_TYPES:type, Float:x, Float:y, Float:radius, square
 			}
 			case EMPTY_CIRCLE:
 			{
+				new bool:second_quadrant = false;
+
+				for(new j = 0; j < squares; j++)
+				{
+					temp_diff = diff * float(j);
+					next_diff = diff * float(j + 1);
+
+					temp_x = radius * floatcos(temp_diff, degrees);
+					temp_y = radius * floatsin(temp_diff, degrees);
+
+					next_x = radius * floatcos(diff * float(j + 1), degrees);
+
+					printf("%f", temp_diff);
+
+					if(0.0 <= temp_diff <= 90.0)
+					{
+						if(j == 0)
+						{
+							temp_y = 0.0;
+							temp_x = (MAP_SIZE_LIMIT - x);
+						}
+
+						gzs_gInfo[i][gzs_Elements][j] =  GangZoneCreate((x + next_x), (y + temp_y), (x + temp_x), MAP_SIZE_LIMIT);
+					}
+					else if(90.0 < temp_diff < 180.0)
+					{
+						if(next_diff >= 180.0)
+						{
+							next_x = - (MAP_SIZE_LIMIT + x);
+							temp_y = 0.0;
+
+							second_quadrant = true;
+						}
+
+						gzs_gInfo[i][gzs_Elements][j] =  GangZoneCreate((x + next_x), (y + temp_y), (x + temp_x), MAP_SIZE_LIMIT);
+					}
+					else if(180.0 <= temp_diff <= 270.0)
+					{
+						if(second_quadrant)
+						{
+							second_quadrant = false;
+
+							temp_x = - (MAP_SIZE_LIMIT + x);
+							temp_y = 0.0;
+
+						}
+
+						gzs_gInfo[i][gzs_Elements][j] =  GangZoneCreate((x + temp_x), -MAP_SIZE_LIMIT, (x + next_x), (y + temp_y));
+					}
+					else if(270 < temp_diff <= 360.0)
+					{
+						if((squares - j) <= 1)
+						{
+							next_x = (MAP_SIZE_LIMIT - x);
+							temp_y = 0.0;
+						}
+
+						gzs_gInfo[i][gzs_Elements][j] =  GangZoneCreate((x + temp_x), -MAP_SIZE_LIMIT, (x + next_x), (y + temp_y));
+					}
+				}
 			}
 			case CIRCUMFERENCE:
 			{
@@ -214,7 +280,7 @@ stock GZ_ShapeCreate(GZ_SHAPE_TYPES:type, Float:x, Float:y, Float:radius, square
 					gzs_gInfo[i][gzs_Elements][j] = GangZoneCreate((x + temp_x) - square_size, (y + temp_y) - square_size, (x + temp_x) + square_size, (y + temp_y) + square_size);
 				}
 			}
-			case default:
+			default:
 			{
 				printf("** [GZ Shapes] The shape couldn't be created, the shape type isn't correct.");
 				break;
@@ -229,26 +295,26 @@ stock GZ_ShapeCreate(GZ_SHAPE_TYPES:type, Float:x, Float:y, Float:radius, square
 	return INVALID_GZ_SHAPE_ID;
 }
 
-stock GZ_CircleDestroy(circleid)
+stock GZ_ShapeDestroy(shapeid)
 {
-	if(0 <= circleid < MAX_GZ_SHAPES)
+	if(0 <= shapeid < MAX_GZ_SHAPES)
 	{
-		if(gzs_gInfo[circleid][gzs_Exists])
+		if(gzs_gInfo[shapeid][gzs_Exists])
 		{
 			for(new y = 0; y < MAX_GANG_ZONES; y++)
 			{
-				if(gzs_gInfo[circleid][gzs_Elements][y] == INVALID_GANG_ZONE)
+				if(gzs_gInfo[shapeid][gzs_Elements][y] == INVALID_GANG_ZONE)
 				{
 					continue;
 				}
 
 				gzs_gGangZonesUsed--;
 
-				GangZoneDestroy(gzs_gInfo[circleid][gzs_Elements][y]);
-				gzs_gInfo[circleid][gzs_Elements][y] = INVALID_GANG_ZONE;
+				GangZoneDestroy(gzs_gInfo[shapeid][gzs_Elements][y]);
+				gzs_gInfo[shapeid][gzs_Elements][y] = INVALID_GANG_ZONE;
 			}
 
-			gzs_gInfo[circleid][gzs_Exists] = false;
+			gzs_gInfo[shapeid][gzs_Exists] = false;
 
 			return 1;
 		}
@@ -256,20 +322,20 @@ stock GZ_CircleDestroy(circleid)
 	return 0;
 }
 
-stock GZ_CircleShowForPlayer(playerid, circleid, color)
+stock GZ_ShapeShowForPlayer(playerid, shapeid, color)
 {
-	if(0 <= circleid < MAX_GZ_SHAPES)
+	if(0 <= shapeid < MAX_GZ_SHAPES)
 	{
-		if(gzs_gInfo[circleid][gzs_Exists])
+		if(gzs_gInfo[shapeid][gzs_Exists])
 		{
 			for(new y = 0; y < MAX_GANG_ZONES; y++)
 			{
-				if(gzs_gInfo[circleid][gzs_Elements][y] == INVALID_GANG_ZONE)
+				if(gzs_gInfo[shapeid][gzs_Elements][y] == INVALID_GANG_ZONE)
 				{
 					continue;
 				}
 
-				GangZoneShowForPlayer(playerid, gzs_gInfo[circleid][gzs_Elements][y], color);
+				GangZoneShowForPlayer(playerid, gzs_gInfo[shapeid][gzs_Elements][y], color);
 			}
 
 			return 1;
@@ -278,20 +344,20 @@ stock GZ_CircleShowForPlayer(playerid, circleid, color)
 	return 0;
 }
 
-stock GZ_CircleShowForAll(circleid, color)
+stock GZ_ShapeShowForAll(shapeid, color)
 {
-	if(0 <= circleid < MAX_GZ_SHAPES)
+	if(0 <= shapeid < MAX_GZ_SHAPES)
 	{
-		if(gzs_gInfo[circleid][gzs_Exists])
+		if(gzs_gInfo[shapeid][gzs_Exists])
 		{
 			for(new y = 0; y < MAX_GANG_ZONES; y++)
 			{
-				if(gzs_gInfo[circleid][gzs_Elements][y] == INVALID_GANG_ZONE)
+				if(gzs_gInfo[shapeid][gzs_Elements][y] == INVALID_GANG_ZONE)
 				{
 					continue;
 				}
 
-				GangZoneShowForAll(gzs_gInfo[circleid][gzs_Elements][y], color);
+				GangZoneShowForAll(gzs_gInfo[shapeid][gzs_Elements][y], color);
 			}
 
 			return 1;
@@ -300,20 +366,20 @@ stock GZ_CircleShowForAll(circleid, color)
 	return 0;
 }
 
-stock GZ_CircleHideForPlayer(playerid, circleid)
+stock GZ_ShapeHideForPlayer(playerid, shapeid)
 {
-	if(0 <= circleid < MAX_GZ_SHAPES)
+	if(0 <= shapeid < MAX_GZ_SHAPES)
 	{
-		if(gzs_gInfo[circleid][gzs_Exists])
+		if(gzs_gInfo[shapeid][gzs_Exists])
 		{
 			for(new y = 0; y < MAX_GANG_ZONES; y++)
 			{
-				if(gzs_gInfo[circleid][gzs_Elements][y] == INVALID_GANG_ZONE)
+				if(gzs_gInfo[shapeid][gzs_Elements][y] == INVALID_GANG_ZONE)
 				{
 					continue;
 				}
 
-				GangZoneHideForPlayer(playerid, gzs_gInfo[circleid][gzs_Elements][y]);
+				GangZoneHideForPlayer(playerid, gzs_gInfo[shapeid][gzs_Elements][y]);
 			}
 
 			return 1;
@@ -322,20 +388,20 @@ stock GZ_CircleHideForPlayer(playerid, circleid)
 	return 0;
 }
 
-stock GZ_CircleHideForAll(circleid)
+stock GZ_ShapeHideForAll(shapeid)
 {
-	if(0 <= circleid < MAX_GZ_SHAPES)
+	if(0 <= shapeid < MAX_GZ_SHAPES)
 	{
-		if(gzs_gInfo[circleid][gzs_Exists])
+		if(gzs_gInfo[shapeid][gzs_Exists])
 		{
 			for(new y = 0; y < MAX_GANG_ZONES; y++)
 			{
-				if(gzs_gInfo[circleid][gzs_Elements][y] == INVALID_GANG_ZONE)
+				if(gzs_gInfo[shapeid][gzs_Elements][y] == INVALID_GANG_ZONE)
 				{
 					continue;
 				}
 
-				GangZoneHideForAll(playerid, gzs_gInfo[circleid][gzs_Elements][y]);
+				GangZoneHideForAll(playerid, gzs_gInfo[shapeid][gzs_Elements][y]);
 			}
 
 			return 1;
@@ -344,20 +410,20 @@ stock GZ_CircleHideForAll(circleid)
 	return 0;
 }
 
-stock GZ_CircleFlashForPlayer(playerid, circleid, flashcolor)
+stock GZ_ShapeFlashForPlayer(playerid, shapeid, flashcolor)
 {
-	if(0 <= circleid < MAX_GZ_SHAPES)
+	if(0 <= shapeid < MAX_GZ_SHAPES)
 	{
-		if(gzs_gInfo[circleid][gzs_Exists])
+		if(gzs_gInfo[shapeid][gzs_Exists])
 		{
 			for(new y = 0; y < MAX_GANG_ZONES; y++)
 			{
-				if(gzs_gInfo[circleid][gzs_Elements][y] == INVALID_GANG_ZONE)
+				if(gzs_gInfo[shapeid][gzs_Elements][y] == INVALID_GANG_ZONE)
 				{
 					continue;
 				}
 
-				GangZoneFlashForPlayer(playerid, gzs_gInfo[circleid][gzs_Elements][y], flashcolor);
+				GangZoneFlashForPlayer(playerid, gzs_gInfo[shapeid][gzs_Elements][y], flashcolor);
 			}
 
 			return 1;
@@ -366,20 +432,20 @@ stock GZ_CircleFlashForPlayer(playerid, circleid, flashcolor)
 	return 0;
 }
 
-stock GZ_CircleFlashForAll(circleid, flashcolor)
+stock GZ_ShapeFlashForAll(shapeid, flashcolor)
 {
-	if(0 <= circleid < MAX_GZ_SHAPES)
+	if(0 <= shapeid < MAX_GZ_SHAPES)
 	{
-		if(gzs_gInfo[circleid][gzs_Exists])
+		if(gzs_gInfo[shapeid][gzs_Exists])
 		{
 			for(new y = 0; y < MAX_GANG_ZONES; y++)
 			{
-				if(gzs_gInfo[circleid][gzs_Elements][y] == INVALID_GANG_ZONE)
+				if(gzs_gInfo[shapeid][gzs_Elements][y] == INVALID_GANG_ZONE)
 				{
 					continue;
 				}
 
-				GangZoneFlashForAll(gzs_gInfo[circleid][gzs_Elements][y], flashcolor);
+				GangZoneFlashForAll(gzs_gInfo[shapeid][gzs_Elements][y], flashcolor);
 			}
 
 			return 1;
@@ -388,20 +454,20 @@ stock GZ_CircleFlashForAll(circleid, flashcolor)
 	return 0;
 }
 
-stock GZ_CircleStopFlashForPlayer(playerid, circleid)
+stock GZ_ShapeStopFlashForPlayer(playerid, shapeid)
 {
-	if(0 <= circleid < MAX_GZ_SHAPES)
+	if(0 <= shapeid < MAX_GZ_SHAPES)
 	{
-		if(gzs_gInfo[circleid][gzs_Exists])
+		if(gzs_gInfo[shapeid][gzs_Exists])
 		{
 			for(new y = 0; y < MAX_GANG_ZONES; y++)
 			{
-				if(gzs_gInfo[circleid][gzs_Elements][y] == INVALID_GANG_ZONE)
+				if(gzs_gInfo[shapeid][gzs_Elements][y] == INVALID_GANG_ZONE)
 				{
 					continue;
 				}
 
-				GangZoneStopFlashForPlayer(playerid, gzs_gInfo[circleid][gzs_Elements][y]);
+				GangZoneStopFlashForPlayer(playerid, gzs_gInfo[shapeid][gzs_Elements][y]);
 			}
 
 			return 1;
@@ -410,20 +476,20 @@ stock GZ_CircleStopFlashForPlayer(playerid, circleid)
 	return 0;
 }
 
-stock GZ_CircleStopFlashForAll(circleid)
+stock GZ_ShapeStopFlashForAll(shapeid)
 {
-	if(0 <= circleid < MAX_GZ_SHAPES)
+	if(0 <= shapeid < MAX_GZ_SHAPES)
 	{
-		if(gzs_gInfo[circleid][gzs_Exists])
+		if(gzs_gInfo[shapeid][gzs_Exists])
 		{
 			for(new y = 0; y < MAX_GANG_ZONES; y++)
 			{
-				if(gzs_gInfo[circleid][gzs_Elements][y] == INVALID_GANG_ZONE)
+				if(gzs_gInfo[shapeid][gzs_Elements][y] == INVALID_GANG_ZONE)
 				{
 					continue;
 				}
 
-				GangZoneStopFlashForAll(gzs_gInfo[circleid][gzs_Elements][y]);
+				GangZoneStopFlashForAll(gzs_gInfo[shapeid][gzs_Elements][y]);
 			}
 
 			return 1;
@@ -432,7 +498,7 @@ stock GZ_CircleStopFlashForAll(circleid)
 	return 0;
 }
 
-stock GZ_CircleDestroyAll()
+stock GZ_ShapeDestroyAll()
 {
 	for(new x = 0; x < MAX_GZ_SHAPES; x++)
 	{
