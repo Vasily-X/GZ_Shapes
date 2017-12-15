@@ -6,15 +6,18 @@
 
 // ================================== [DEFINITIONS] ================================== //
 #if !defined MAX_GZ_SHAPES
-	#define MAX_GZ_SHAPES			10
+	#define MAX_GZ_SHAPES				10
 #endif
 
 #if !defined INVALID_GZ_SHAPE_ID
-	#define INVALID_GZ_SHAPE_ID	-1
+	#define INVALID_GZ_SHAPE_ID			-1
 #endif
 
 
 // ================================== [VARIABLES] ================================== //
+static bool:gzs_gInit;
+static bool:gzs_gExit;
+
 enum GZ_SHAPE_TYPES
 {
 	CIRCLE,
@@ -31,8 +34,7 @@ enum gzs_data
 	bool:gzs_Exists
 }
 static gzs_gInfo[MAX_GZ_SHAPES][gzs_data];
-static bool:gzs_gInit;
-static bool:gzs_gExit;
+
 static gzs_gGangZonesUsed;
 
 
