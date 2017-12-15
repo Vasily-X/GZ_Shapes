@@ -2,8 +2,7 @@
 Gang Zone Shapes
 
 ## Coming soon
-- Empty circles
-- Polygons
+- Polygons (drawn straight lines between specific points).
 
 ## External links
 ###### Official SA-MP Forums thread
