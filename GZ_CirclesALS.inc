@@ -13,8 +13,9 @@
 	#define INVALID_GZ_SHAPE_ID			-1
 #endif
 
-
-#define MAP_SIZE_LIMIT					3000.0
+#if !defined MAP_SIZE_LIMIT
+	#define MAP_SIZE_LIMIT				3000.0			// Useful for setting limits for the EMPTY_CIRCLE shape.
+#endif
 
 
 // ================================== [VARIABLES] ================================== //
