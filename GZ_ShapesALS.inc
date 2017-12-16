@@ -220,8 +220,6 @@ stock GZ_ShapeCreate(GZ_SHAPE_TYPES:type, Float:x, Float:y, Float:radius, square
 
 					next_x = radius * floatcos(diff * float(j + 1), degrees);
 
-					printf("%f", temp_diff);
-
 					if(0.0 <= temp_diff <= 90.0)
 					{
 						if(j == 0)
