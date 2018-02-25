@@ -400,7 +400,7 @@ stock GZ_ShapeHideForAll(shapeid)
 					continue;
 				}
 
-				GangZoneHideForAll(playerid, gzs_gInfo[shapeid][gzs_Elements][y]);
+				GangZoneHideForAll(gzs_gInfo[shapeid][gzs_Elements][y]);
 			}
 
 			return 1;
