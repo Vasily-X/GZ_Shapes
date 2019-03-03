@@ -168,11 +168,29 @@ stock GZ_ShapeCreate(GZ_SHAPE_TYPES:type, Float:x, Float:y, Float:radius, square
 		new auto_squares = floatround((radius * 512.0)/750.0);
 		new free_squares = MAX_GANG_ZONES - gzs_gGangZonesUsed;
 
-		squares = (squares == -1) ? ( (auto_squares <= free_squares) ? (auto_squares) : (free_squares) ) : ( (squares <= free_squares) ? (squares) : (free_squares) );
-
-		if(squares == 0)
+		if(squares == -1) // Assign the number of gangzones (squares) automatically.
 		{
-			printf("** [GZ Shapes] The shape couldn't be created, gang zones limit reached.");
+			if(auto_squares <= free_squares)
+			{
+				squares = auto_squares;
+			}
+			else
+			{
+				squares = free_squares;
+			}
+		}
+		else
+		{
+			if(squares > free_squares)
+			{
+				squares = free_squares;
+			}
+		}
+
+		
+		if(squares <= 1) // If there is only one gangzone or none available, creating the shape isn't worth.
+		{
+			printf("** [GZ Shapes] The shape couldn't be created, there aren't enough free gang zones.");
 			break;
 		}
 
