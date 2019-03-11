@@ -8,7 +8,7 @@
 #include <YSI\y_hooks>
 
 #if !defined MAX_GZ_SHAPES
-	#define MAX_GZ_SHAPES					10
+	#define MAX_GZ_SHAPES					3
 #endif
 
 #if !defined INVALID_GZ_SHAPE_ID
@@ -182,7 +182,7 @@ stock GZ_ShapeCreate(GZ_SHAPE_TYPES:type, Float:x, Float:y, Float:radius, square
 				temp_x = radius * floatcos(temp_diff, degrees);
 				temp_y = radius * floatsin(temp_diff, degrees);
 
-				next_x = radius * floatcos(diff * float(j + 1), degrees);
+				next_x = radius * floatcos(next_diff, degrees);
 
 				if(0.0 <= temp_diff <= 90.0)
 				{
