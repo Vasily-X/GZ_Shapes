@@ -8,7 +8,7 @@
 #include <YSI\y_hooks>
 
 #if !defined MAX_GZ_SHAPES
-	#define MAX_GZ_SHAPES					3
+	#define MAX_GZ_SHAPES					10
 #endif
 
 #if !defined INVALID_GZ_SHAPE_ID
